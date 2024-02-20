@@ -22,10 +22,10 @@
         "printWidth": 120,
         "singleQuote": true,
         "trailingComma": "es5",
-        "parser": "flow",
         "semi": false,
         "bracketSpacing": true,
-        "endOfLine": "auto"
+        "endOfLine": "auto",
+        "parser": "typescript"
       }
     ]
   }
