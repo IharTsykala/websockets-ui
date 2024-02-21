@@ -1,23 +1,40 @@
 import WebSocket, { WebSocketServer } from 'ws'
+import { IMainController, IWebSocket } from '../types'
+import { MainController } from '../main/main.controller'
 
 export class WsServer {
   webSocket: WebSocketServer
+  mainController: IMainController
 
   constructor(port: number) {
     this.webSocket = new WebSocketServer({ port })
+    this.mainController = new MainController()
+  }
+
+  private parseData(jsonData: string) {
+    const { type, data, id } = JSON.parse(jsonData)
+    const parsedData = JSON.parse(data ?? '')
+
+    const resData = this.mainController.run(type, data, id)
+
+    return { type, parsedData, id }
   }
 
   run() {
-    this.webSocket.on('connection', (ws: WebSocket & { id: number }) => {
+    this.webSocket.on('listening', () => {
+      console.log(`ws is listening on the ${this.webSocket.options.port} port!`)
+    })
+
+    this.webSocket.on('connection', (ws: IWebSocket) => {
       console.log(`${'WS_CONNECT'} ${this.webSocket.options.port}!`)
-      const wsId = Math.floor(Math.random() * (1 - 100 + 1)) + 100
+      const wsId: number = Math.floor(Math.random() * (1 - 100 + 1)) + 100
       ws.id = wsId
       console.log(`${'CLIENT_CONNECT'} ${wsId}!`)
 
-      ws.on('message', (data: string) => {
-        const convertData = 'messager'
-        console.log('data', data.toString())
-        this.sendMessage(data.toString())
+      ws.on('message', (data: string): void => {
+        const { type, parsedData, id } = this.parseData(data.toString())
+
+        this.sendMessage(parsedData)
       })
 
       ws.on('close', () => {
@@ -37,18 +54,10 @@ export class WsServer {
   }
 
   private sendMessage(data: string): void {
-    this.webSocket.clients.forEach((client) => {
+    this.webSocket.clients.forEach((client: WebSocket): void => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(data)
       }
     })
-  }
-
-  private parseData(rawData: string) {
-    // const { type, data, id } = JSON.parse(rawData)
-    // const convertData = data.length ? JSON.parse(data) : data
-    //
-    // return { type, data: convertData, id }
-    return ''
   }
 }
