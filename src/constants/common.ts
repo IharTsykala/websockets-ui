@@ -1,3 +1,5 @@
+import { ICommands } from '../types'
+
 export const COMMANDS = {
   REG_USER: 'reg',
   CREATE_GAME: 'create_game',
@@ -13,4 +15,9 @@ export const COMMANDS = {
   FINISH: 'finish',
   DISCONNECT: 'disconnect',
   SINGLE_PLAY: 'single_play',
+}
+
+export const MAP_TYPE_ACTION: ICommands = {
+  reg: 'auth',
+  create_room: 'createRoom',
 }

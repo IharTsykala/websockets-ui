@@ -1,6 +1,7 @@
-import { COMMANDS } from '../constants'
+import { IReq, IRes } from './sockets'
+import { ICommands } from './commands'
+import { IUser } from './users'
 
 export interface IMainController {
-  getAction: (type: keyof typeof COMMANDS) => void
-  run: (type: any, data: any, socketId: number) => void
+  run: (type: keyof ICommands, data: IReq['data'], userId: IUser['id']) => IRes
 }
