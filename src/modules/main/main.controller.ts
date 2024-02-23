@@ -1,10 +1,13 @@
-import { IAuthController, IMainController } from '../types'
+import { IAuthController, IDataBase, IMainController } from '../types'
 import { COMMANDS } from '../constants'
 import { AuthController } from '../auth/auth.controller'
+import { DataBase } from '../dataBase'
 
 export class MainController implements IMainController {
+  dataBase: IDataBase
   auth: IAuthController
   constructor() {
+    this.dataBase = new DataBase()
     this.auth = new AuthController()
   }
 
