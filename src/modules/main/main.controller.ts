@@ -14,6 +14,8 @@ import {
   IRoomsResponse,
   IGame,
   IGamesController,
+  IWebSocket,
+  TSendMessage,
 } from '../../types'
 import { AuthController } from '../auth/auth.controller'
 import { MAP_TYPE_ACTION } from '../../constants'
@@ -22,6 +24,7 @@ import { WinnersController } from '../winners/winners.controller'
 import { RoomsController } from '../rooms/rooms.controller'
 import { IRoomsController } from '../../types'
 import { GamesController } from '../games/games.controller'
+import { IGamesResponse } from '../../types/games'
 
 export class MainController implements IMainController {
   private readonly usersController: IUsersController
@@ -38,19 +41,19 @@ export class MainController implements IMainController {
     this.gamesController = new GamesController(this.dataBase)
   }
 
-  run(type: keyof ICommands, data: IReq['data'], userId: IUser['index']): IRes {
+  run(type: keyof ICommands, data: IReq['data'], ws: IWebSocket, sentMessage: TSendMessage<unknown>): IRes | null {
     const actionKey = MAP_TYPE_ACTION[type]
 
-    let response = {}
+    let response = null
 
     if (actionKey) {
-      response = this[actionKey](data, userId)
+      response = this[actionKey](data, ws, sentMessage)
     }
 
-    return response as IRes
+    return response
   }
 
-  private auth(data: IReq['data']): IRes {
+  private auth(data: IReq['data'], ws: IWebSocket): null {
     const authResponse: IAuthResponse = this.authController.signIn(data)
 
     const winnersResponse: IWinnersResponse = this.winnersController.createWinner(
@@ -60,23 +63,42 @@ export class MainController implements IMainController {
 
     const initialRoomsResponse: IInitialRoomsResponse = this.roomsController.getInitialRoom()
 
-    return {
-      data: [authResponse.json, winnersResponse.json, initialRoomsResponse.json],
-      userIndex: authResponse.userIndex,
+    ws.id = authResponse.userIndex
+
+    const jsons = [authResponse.json, winnersResponse.json, initialRoomsResponse.json]
+
+    for (const key of jsons) {
+      ws.send(key)
     }
+
+    return null
   }
 
-  private createRoom(_: IReq['data'], userId: IUser['index']): IRes {
-    const roomResponse: IRoomsResponse = this.roomsController.createRoom(userId)
+  private createRoom(_: IReq['data'], ws: IWebSocket): IRes {
+    const roomResponse: IRoomsResponse = this.roomsController.createRoom(ws.id)
 
     return { data: [roomResponse.json] }
   }
 
-  private createGame(data: IReq['data'], userId: IUser['index']) {
-    const roomResponse: IRoomsResponse = this.roomsController.removeRoom(userId)
+  private createGame(data: IReq['data'], ws: IWebSocket, sendMessage: TSendMessage<unknown>): IRes {
+    const roomResponse: IRoomsResponse = this.roomsController.removeRoom(ws.id)
 
-    const gameResponse = this.gamesController.createGame({ idGame: Number(data.indexRoom), idPlayer: userId })
+    const gameResponse: IGamesResponse = this.gamesController.createGame(
+      {
+        idGame: Number(data.indexRoom),
+        idPlayer: ws.id,
+      },
+      sendMessage as TSendMessage<IGame>
+    )
+
+    const sendMessageDecorator = gameResponse.sendMessage!
 
     return { data: [roomResponse.json, gameResponse.json] }
+  }
+
+  private startGame(data: IReq['data'], ws: IWebSocket): IRes {
+    const gameResponse: IGamesResponse = this.gamesController.startGame(data, ws.id)
+
+    return { data: [gameResponse.json] }
   }
 }

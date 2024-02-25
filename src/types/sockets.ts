@@ -8,7 +8,7 @@ export interface IWebSocket extends WebSocket {
 
 export interface IReq {
   type: keyof ICommands
-  data: Record<string, string | number>
+  data: Record<string, unknown>
   id: number
 }
 
@@ -26,3 +26,7 @@ type IRun = () => void
 export interface IWsServer {
   run: IRun
 }
+
+export type TSendClient<T> = (client: WebSocket, responseData: T) => void
+
+export type TSendMessage<T> = (responseData: T, sendClient: TSendClient<T>) => void

@@ -1,4 +1,4 @@
-export { IWebSocket, IReq, IRes } from './sockets'
+export { IWebSocket, IReq, IRes, TSendClient, TSendMessage } from './sockets'
 
 export { IAuthController, IAuthService, IAuthResponse } from './auth'
 

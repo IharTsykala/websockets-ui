@@ -1,7 +1,6 @@
-import { IReq, IRes } from './sockets'
+import { IReq, IRes, IWebSocket, TSendMessage } from './sockets'
 import { ICommands } from './commands'
-import { IUser } from './users'
 
 export interface IMainController {
-  run: (type: keyof ICommands, data: IReq['data'], userId: IUser['index']) => IRes
+  run: (type: keyof ICommands, data: IReq['data'], ws: IWebSocket, sendMessage: TSendMessage<unknown>) => IRes | null
 }

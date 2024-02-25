@@ -1,8 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { ICommands, IDataBase, IMainController, IReq, IRes, IWebSocket } from '../types'
+import { ICommands, IDataBase, IMainController, IReq, IRes, IWebSocket, TSendClient } from '../types'
 import { MainController } from '../modules/main/main.controller'
 import { IWsServer } from '../types/sockets'
-import { COMMANDS } from '../constants'
 
 export class WsServer implements IWsServer {
   webSocket: WebSocketServer
@@ -23,11 +22,14 @@ export class WsServer implements IWsServer {
     return { type, data: parsedData, id }
   }
 
-  private sendMessage(jsonResponseData: string): void {
-    // console.log('data', jsonResponseData)
+  private sendClient(client: WebSocket, data: string): void {
+    client.send(data)
+  }
+
+  private sendMessage<T>(responseData: T, sendClient: TSendClient<T>): void {
     this.webSocket.clients.forEach((client: WebSocket): void => {
-      if (client.readyState === WebSocket.OPEN && (client as IWebSocket).id) {
-        client.send(jsonResponseData)
+      if (client.readyState === WebSocket.OPEN) {
+        sendClient(client, responseData)
       }
     })
   }
@@ -43,21 +45,19 @@ export class WsServer implements IWsServer {
       ws.on('message', (dataReg: string): void => {
         const { type, data } = this.parseData(dataReg.toString())
 
-        const response: IRes = this.mainController.run(type as keyof ICommands, data, ws.id)
+        const response: IRes | null = this.mainController.run(type as keyof ICommands, data, ws, this.sendMessage)
 
-        if (type === COMMANDS.REG_USER) {
-          ws.id = response.userIndex!
+        if (!response) {
+          return
         }
 
-        // console.log('response', response)
-
         for (const key of response.data ?? []) {
-          this.sendMessage(key)
+          this.sendMessage(key, this.sendClient)
         }
       })
 
       ws.on('close', () => {
-        this.sendMessage('close')
+        this.sendMessage('close', this.sendClient)
       })
 
       ws.on('error', (err) => console.log('err:', err))
