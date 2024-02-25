@@ -1,23 +1,19 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { ICommands, IDataBase, IMainController, IReq, IRes, IRooms, IUsers, IWebSocket } from '../types'
+import { ICommands, IDataBase, IMainController, IReq, IRes, IWebSocket } from '../types'
 import { MainController } from '../modules/main/main.controller'
 import { IWsServer } from '../types/sockets'
+import { COMMANDS } from '../constants'
 
 export class WsServer implements IWsServer {
   webSocket: WebSocketServer
   mainController: IMainController
 
-  constructor(
-    private readonly dataBase: IDataBase,
-    private readonly users: IUsers,
-    private readonly rooms: IRooms,
-    port: number
-  ) {
+  constructor(private readonly dataBase: IDataBase, port: number) {
     this.webSocket = new WebSocketServer({ port })
-    this.mainController = new MainController(this.dataBase, this.users, this.rooms)
+    this.mainController = new MainController(this.dataBase)
   }
 
-  private parseData(jsonData: string): IReq | IRes {
+  private parseData(jsonData: string): IReq {
     const { type, data, id } = JSON.parse(jsonData ?? '')
     if (!data) {
       return { type, data, id }
@@ -30,7 +26,7 @@ export class WsServer implements IWsServer {
   private sendMessage(jsonResponseData: string): void {
     console.log('data', jsonResponseData)
     this.webSocket.clients.forEach((client: WebSocket): void => {
-      if (client.readyState === WebSocket.OPEN) {
+      if (client.readyState === WebSocket.OPEN && (client as IWebSocket).id) {
         client.send(jsonResponseData)
       }
     })
@@ -47,15 +43,17 @@ export class WsServer implements IWsServer {
       ws.on('message', (dataReg: string): void => {
         const { type, data } = this.parseData(dataReg.toString())
 
-        const responseData: IRes = this.mainController.run(type as keyof ICommands, data, ws.id)
+        const response: IRes = this.mainController.run(type as keyof ICommands, data, ws.id)
 
-        if (responseData.wsId) {
-          ws.id = responseData.id
+        if (type === COMMANDS.REG_USER) {
+          ws.id = response.userIndex!
         }
 
-        const jsonResponseData: string = JSON.stringify(responseData)
+        console.log('response', response)
 
-        this.sendMessage(jsonResponseData)
+        for (const key of response.data) {
+          this.sendMessage(key)
+        }
       })
 
       ws.on('close', () => {

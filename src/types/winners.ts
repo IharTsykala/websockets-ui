@@ -2,10 +2,21 @@ import { IUser } from './users'
 
 export interface IWinner {
   id: number
-  userId: IUser['id']
+  userIndex: IUser['index']
+  name: IUser['name']
   wins: number
 }
 
-export interface IWinners {
-  createWinner: (room: Pick<IWinner, 'userId'>) => IWinner
+export interface IWinnersResponse {
+  json: string
+}
+
+export interface IWinnersController {
+  getWinners: () => IWinner[]
+  createWinner: (userIndex: IUser['index'], userName: IUser['name']) => IWinnersResponse
+}
+
+export interface IWinnersService {
+  getWinners: () => IWinner[]
+  createWinner: (userId: IWinner['userIndex'], userName: IWinner['name']) => IWinner
 }

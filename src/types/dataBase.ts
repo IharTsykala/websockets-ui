@@ -7,8 +7,10 @@ export interface IDataBase {
   getUser(userProps: Partial<IUser>): IUser | undefined
   addUser(user: IUser): IUser
   updateUser(user: IUser): boolean
+  getRooms(): IRoom[]
   addRoom(room: IRoom): IRoom
-  updateRoom(roomId: IRoom['id'], userId: IUser['id']): IRoom | undefined
+  updateRoom(roomId: IRoom['id'], userId: IUser['index']): IRoom | undefined
+  getWinners(): IWinner[]
   addWinner(winner: IWinner): IWinner
-  updateWinner(userId: IUser['id']): IWinner | undefined
+  updateWinner(userId: IUser['index']): IWinner | undefined
 }

@@ -2,66 +2,71 @@ import {
   ICommands,
   IDataBase,
   IMainController,
-  INullRoom,
   IReq,
   IRes,
-  IRoom,
-  IRooms,
+  IAuthController,
+  IAuthResponse,
+  IUsersController,
+  IWinnersController,
+  IWinnersResponse,
+  IInitialRoomsResponse,
   IUser,
-  IUsers,
-  TAuthController,
+  IRoomsResponse,
+  IRoom,
 } from '../../types'
 import { AuthController } from '../auth/auth.controller'
 import { MAP_TYPE_ACTION } from '../../constants'
+import { UsersController } from '../users/users.controller'
+import { WinnersController } from '../winners/winners.controller'
+import { RoomsController } from '../rooms/rooms.controller'
+import { IRoomsController } from '../../types'
 
 export class MainController implements IMainController {
-  authController: TAuthController
+  private readonly usersController: IUsersController
+  private readonly roomsController: IRoomsController
+  private readonly authController: IAuthController
+  private readonly winnersController: IWinnersController
 
-  constructor(
-    private readonly dataBase: IDataBase,
-    private readonly usersService: IUsers,
-    private readonly roomsService: IRooms
-  ) {
-    this.authController = new AuthController(this.dataBase, this.usersService)
+  constructor(private readonly dataBase: IDataBase) {
+    this.usersController = new UsersController(dataBase)
+    this.roomsController = new RoomsController(dataBase, this.usersController)
+    this.winnersController = new WinnersController(dataBase)
+    this.authController = new AuthController(this.dataBase, this.usersController)
   }
 
-  run(type: keyof ICommands, data: IReq['data'], userId: IUser['id']): IRes {
+  run(type: keyof ICommands, data: IReq['data'], userId: IUser['index']): IRes {
     const actionKey = MAP_TYPE_ACTION[type]
 
     let response = {}
 
     if (actionKey) {
-      response = this[actionKey](data, type)
+      response = this[actionKey](data, userId)
     }
 
-    return { ...response } as IRes
+    return response as IRes
   }
 
-  private auth(data: IReq['data'], type: keyof ICommands): Omit<IRes, 'type'> {
-    const user: IUser = this.authController.signIn(data)
+  private auth(data: IReq['data']): IRes {
+    const authResponse: IAuthResponse = this.authController.signIn(data)
 
-    const jsonUser: string = JSON.stringify(user)
+    const winnersResponse: IWinnersResponse = this.winnersController.createWinner(
+      authResponse.userIndex,
+      authResponse.userName
+    )
 
-    return [{ data: jsonUser, id: 0, wsId: true, type }, {}] as unknown as Omit<IRes, 'type'>
+    const initialRoomsResponse: IInitialRoomsResponse = this.roomsController.getInitialRoom()
+
+    return {
+      data: [authResponse.json, winnersResponse.json, initialRoomsResponse.json],
+      userIndex: authResponse.userIndex,
+    }
   }
 
-  private createRoom(): Omit<IRes, 'type'> {
-    // const user = this.usersService.getUser(userId)
+  private createRoom(_: IReq['data'], userId: IUser['index']): IRes {
+    this.roomsController.addRoom(userId)
 
-    const room = this.roomsService.uploadRoom(1)
+    const rooms: IRoom[] = this.roomsController.createRooms()
 
-    // const data = {
-    //   roomId: 1,
-    //   roomUsers: [
-    //     {
-    //       name: 'string',
-    //       index: 11111,
-    //     },
-    //   ],
-    // }
-
-    const jsonRoom: string = JSON.stringify(data)
-
-    return { data: jsonRoom, id: 0, type: 'update_room' } as unknown as Omit<IRes, 'type'>
+    return { data: [roomResponse.json] }
   }
 }

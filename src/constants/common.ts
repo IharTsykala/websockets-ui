@@ -21,3 +21,5 @@ export const MAP_TYPE_ACTION: ICommands = {
   reg: 'auth',
   create_room: 'createRoom',
 }
+
+export const COMMON_ID = 0

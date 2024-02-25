@@ -1,19 +1,21 @@
-import { IDataBase, IUser, IUsers } from '../../types'
+import { IDataBase, IReq, IUser, IUsersService } from '../../types'
 
-export class UsersService implements IUsers {
+export class UsersService implements IUsersService {
   private static id: number
 
   constructor(private readonly dataBase: IDataBase) {
     UsersService.id = 1
   }
 
-  createUser(user: Omit<IUser, 'id'>): IUser {
-    const id: number = UsersService.id++
+  createUser(user: Omit<IUser, 'index'>): IUser {
+    const index: number = UsersService.id++
 
-    return { ...user, id }
+    const createdUser: IUser = this.dataBase.addUser({ ...user, index })
+
+    return createdUser
   }
 
-  getUser(id: number): IUser | undefined {
-    return this.dataBase.getUser({ id })
+  getUser(user: Omit<IUser, 'password'>): IUser | undefined {
+    return this.dataBase.getUser(user)
   }
 }

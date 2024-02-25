@@ -1,21 +1,29 @@
-import { INullRoom, IRoom, IRooms, IUser } from '../../types'
+import { IDataBase, IRoom, IRoomsService, IUser, IWinner } from '../../types'
 
-export class RoomsService implements IRooms {
+export class RoomsService implements IRoomsService {
   private static id: number
 
-  constructor() {
+  constructor(private readonly dataBase: IDataBase) {
     RoomsService.id = 1
   }
 
-  // createRoom(userId: number): any {
-  //   const id: number = RoomsService.id++
-  //
-  //   return { data: [], id }
-  // }
+  getInitialRoom(): [] {
+    return []
+  }
 
-  uploadRoom(userId: number): any {
+  getRooms(): IRoom[] {
+    return this.dataBase.getRooms()
+  }
+
+  addRoom(user: IUser): IRoom {
     const id: number = RoomsService.id++
 
-    return { id, usersId: [userId], type: 'upload_room' }
+    return this.dataBase.addRoom({ id, users: [user] })
+  }
+
+  uploadRoom(userId: number): IRoom | undefined {
+    const id: number = RoomsService.id++
+
+    return this.dataBase.updateRoom({ id, userId })
   }
 }

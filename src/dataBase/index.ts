@@ -36,7 +36,7 @@ export class DataBase implements IDataBase {
   }
 
   updateUser(user: IUser): boolean {
-    const index: number = this.users.findIndex((oldUser): boolean => oldUser.id === user.id)
+    const index: number = this.users.findIndex((oldUser): boolean => oldUser.index === user.index)
 
     if (index !== -1) {
       this.users[index] = { ...this.users[index], ...user }
@@ -46,20 +46,30 @@ export class DataBase implements IDataBase {
     return false
   }
 
+  getRooms(): IRoom[] {
+    return this.rooms
+  }
+
   addRoom(room: IRoom): IRoom {
     this.rooms.push(room)
 
     return room
   }
 
-  updateRoom(roomId: IRoom['id'], userId: IUser['id']): IRoom | undefined {
+  updateRoom(roomId: IRoom['id'], userId: IUser['index']): IRoom | undefined {
     const room: IRoom | undefined = this.rooms.find(({ id }): boolean => id === roomId)
 
-    if (room && room.usersId.length < 2) {
-      room.usersId.push(userId)
+    const user: IUser | undefined = this.getUser({ index: userId })
+
+    if (room && room.users.length < 2 && user) {
+      room.users.push(user)
 
       return room
     }
+  }
+
+  getWinners(): IWinner[] {
+    return this.winners
   }
 
   addWinner(winner: IWinner): IWinner {
@@ -68,8 +78,8 @@ export class DataBase implements IDataBase {
     return winner
   }
 
-  updateWinner(userId: IUser['id']): IWinner | undefined {
-    const winner: IWinner | undefined = this.winners.find((winner): boolean => winner.userId === userId)
+  updateWinner(userId: IUser['index']): IWinner | undefined {
+    const winner: IWinner | undefined = this.winners.find((winner): boolean => winner.userIndex === userId)
 
     if (winner) {
       winner.wins++
