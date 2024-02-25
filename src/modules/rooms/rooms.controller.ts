@@ -26,14 +26,32 @@ export class RoomsController implements IRoomsController {
   }
 
   createRoom(userIndex: IUser['index']): IRoomsResponse {
-    const user: IUser | object = this.usersController.getUser({ index: userIndex } as Omit<IUser, 'password'>) ?? {}
+    const user: IUser | undefined = this.usersController.getUser({ index: userIndex } as Omit<IUser, 'password'>)
 
-    const room: IRoom = this.roomsService.addRoom(user)
+    if (!user) {
+      return { json: JSON.stringify({}) }
+    }
+
+    this.roomsService.addRoom(user)
+
+    const rooms: IRoom[] = this.roomsService.getRooms()
 
     const json: string = JSON.stringify({
       id: COMMON_ID,
       type: COMMANDS.UPDATE_ROOM,
-      data: JSON.stringify([{ ...room, roomId: room.id, roomUsers: [user] }]),
+      data: JSON.stringify(rooms),
+    })
+
+    return { json }
+  }
+
+  removeRoom(roomId: number): IRoomsResponse {
+    const rooms: IRoom[] = this.dataBase.removeRoom(roomId)
+
+    const json: string = JSON.stringify({
+      id: COMMON_ID,
+      type: COMMANDS.UPDATE_ROOM,
+      data: JSON.stringify(rooms),
     })
 
     return { json }

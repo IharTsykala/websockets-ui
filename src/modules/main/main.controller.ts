@@ -12,7 +12,8 @@ import {
   IInitialRoomsResponse,
   IUser,
   IRoomsResponse,
-  IRoom,
+  IGame,
+  IGamesController,
 } from '../../types'
 import { AuthController } from '../auth/auth.controller'
 import { MAP_TYPE_ACTION } from '../../constants'
@@ -20,18 +21,21 @@ import { UsersController } from '../users/users.controller'
 import { WinnersController } from '../winners/winners.controller'
 import { RoomsController } from '../rooms/rooms.controller'
 import { IRoomsController } from '../../types'
+import { GamesController } from '../games/games.controller'
 
 export class MainController implements IMainController {
   private readonly usersController: IUsersController
   private readonly roomsController: IRoomsController
   private readonly authController: IAuthController
   private readonly winnersController: IWinnersController
+  private readonly gamesController: IGamesController
 
   constructor(private readonly dataBase: IDataBase) {
     this.usersController = new UsersController(dataBase)
     this.roomsController = new RoomsController(dataBase, this.usersController)
     this.winnersController = new WinnersController(dataBase)
     this.authController = new AuthController(this.dataBase, this.usersController)
+    this.gamesController = new GamesController(this.dataBase)
   }
 
   run(type: keyof ICommands, data: IReq['data'], userId: IUser['index']): IRes {
@@ -63,10 +67,16 @@ export class MainController implements IMainController {
   }
 
   private createRoom(_: IReq['data'], userId: IUser['index']): IRes {
-    this.roomsController.addRoom(userId)
-
-    const rooms: IRoom[] = this.roomsController.createRooms()
+    const roomResponse: IRoomsResponse = this.roomsController.createRoom(userId)
 
     return { data: [roomResponse.json] }
+  }
+
+  private createGame(data: IReq['data'], userId: IUser['index']) {
+    const roomResponse: IRoomsResponse = this.roomsController.removeRoom(userId)
+
+    const gameResponse = this.gamesController.createGame({ idGame: Number(data.indexRoom), idPlayer: userId })
+
+    return { data: [roomResponse.json, gameResponse.json] }
   }
 }

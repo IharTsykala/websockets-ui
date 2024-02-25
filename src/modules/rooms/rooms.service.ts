@@ -16,14 +16,12 @@ export class RoomsService implements IRoomsService {
   }
 
   addRoom(user: IUser): IRoom {
-    const id: number = RoomsService.id++
+    const roomId: number = RoomsService.id++
 
-    return this.dataBase.addRoom({ id, users: [user] })
+    return this.dataBase.addRoom({ roomId, roomUsers: [user] })
   }
 
-  uploadRoom(userId: number): IRoom | undefined {
-    const id: number = RoomsService.id++
-
-    return this.dataBase.updateRoom({ id, userId })
+  removeRoom(roomId: IRoom['roomId']): IRoom[] | [] {
+    return this.dataBase.removeRoom(roomId)
   }
 }

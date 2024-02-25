@@ -24,7 +24,7 @@ export class WsServer implements IWsServer {
   }
 
   private sendMessage(jsonResponseData: string): void {
-    console.log('data', jsonResponseData)
+    // console.log('data', jsonResponseData)
     this.webSocket.clients.forEach((client: WebSocket): void => {
       if (client.readyState === WebSocket.OPEN && (client as IWebSocket).id) {
         client.send(jsonResponseData)
@@ -49,9 +49,9 @@ export class WsServer implements IWsServer {
           ws.id = response.userIndex!
         }
 
-        console.log('response', response)
+        // console.log('response', response)
 
-        for (const key of response.data) {
+        for (const key of response.data ?? []) {
           this.sendMessage(key)
         }
       })

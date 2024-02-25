@@ -1,15 +1,17 @@
-import { IDataBase, IRoom, IUser, IWinner } from '../types'
+import { IDataBase, IGame, IRoom, IUser, IWinner } from '../types'
 import { REDUNDANT_PROPS } from '../constants'
 
 export class DataBase implements IDataBase {
   private readonly users: IUser[]
   private readonly rooms: IRoom[]
   private readonly winners: IWinner[]
+  private readonly games: IGame[]
 
   constructor() {
     this.users = []
     this.rooms = []
     this.winners = []
+    this.games = []
   }
 
   getUsers(): IUser[] {
@@ -56,16 +58,8 @@ export class DataBase implements IDataBase {
     return room
   }
 
-  updateRoom(roomId: IRoom['id'], userId: IUser['index']): IRoom | undefined {
-    const room: IRoom | undefined = this.rooms.find(({ id }): boolean => id === roomId)
-
-    const user: IUser | undefined = this.getUser({ index: userId })
-
-    if (room && room.users.length < 2 && user) {
-      room.users.push(user)
-
-      return room
-    }
+  removeRoom(roomId: IRoom['roomId']): IRoom[] | [] {
+    return this.rooms.filter((room): boolean => room.roomId !== roomId)
   }
 
   getWinners(): IWinner[] {
@@ -86,5 +80,11 @@ export class DataBase implements IDataBase {
 
       return winner
     }
+  }
+
+  addGame(game: IGame): IGame {
+    this.games.push(game)
+
+    return game
   }
 }
