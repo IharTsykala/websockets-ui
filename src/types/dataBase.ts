@@ -9,10 +9,12 @@ export interface IDataBase {
   addUser(user: IUser): IUser
   updateUser(user: IUser): boolean
   getRooms(): IRoom[]
+  getRoom(roomId: IRoom['roomId']): IRoom | undefined
   addRoom(room: IRoom): IRoom
   removeRoom(roomId: IRoom['roomId']): IRoom[] | []
   getWinners(): IWinner[]
   addWinner(winner: IWinner): IWinner
   updateWinner(userId: IUser['index']): IWinner | undefined
+  getGame(idGame: IGame['idGame']): IGame | undefined
   addGame(game: IGame): IGame
 }

@@ -1,9 +1,12 @@
 import {
+  IAttackRequest,
+  IAttackResponse,
   IDataBase,
   IGame,
   IGamesController,
   IGamesService,
   IReq,
+  IRoom,
   IUser,
   IWebSocket,
   TSendClient,
@@ -20,32 +23,65 @@ export class GamesController implements IGamesController {
     this.gamesService = new GamesService(dataBase)
   }
 
-  private sendClient<T>(client: IWebSocket, data: T): void {
+  private sendClientCreateGame<T extends IGame>(client: IWebSocket, data: T): void {
     const responseData = { ...data, idPlayer: client.id }
 
+    const json: string = JSON.stringify({
+      id: COMMON_ID,
+      type: COMMANDS.CREATE_GAME,
+      data: JSON.stringify(responseData),
+    })
+
     client.send(json)
+  }
+
+  private sendClientStartGame<T extends IGameDataRes>(client: IWebSocket, data: T): void {
+    const json: string = JSON.stringify({
+      id: COMMON_ID,
+      type: COMMANDS.START_GAME,
+      data: JSON.stringify(data),
+    })
+
+    if (client.id === data.currentPlayerIndex) {
+      client.send(json)
+    }
   }
 
   createGame(game: IGame, sendMessage: TSendMessage<IGame>): IGamesResponse {
     this.dataBase.addGame(game)
 
-    const json: string = JSON.stringify({
-      id: COMMON_ID,
-      type: COMMANDS.CREATE_GAME,
-      data: JSON.stringify(game),
-    })
-
     const sendMessageDecorator = (game: IGame, sendClient: TSendClient<IGame>) => () => sendMessage(game, sendClient)
 
-    return { json, sendMessage: sendMessageDecorator(game, this.sendClient as TSendClient<IGame>) }
+    return { sendMessage: sendMessageDecorator(game, this.sendClientCreateGame as TSendClient<IGame>) }
   }
 
-  startGame(data: IReq['data'], userId: IUser['index']): IGamesResponse {
-    const response: IGameDataRes = this.gamesService.startGame(data, userId)
+  startGame(
+    data: IReq['data'],
+    userId: IUser['index'],
+    sendMessage: TSendMessage<IGameDataRes>
+  ): IGamesResponse | null {
+    const response: IGameDataRes | null = this.gamesService.startGame(data, userId)
+
+    if (!response) {
+      return null
+    }
+
+    const sendMessageDecorator = (game: IGameDataRes, sendClient: TSendClient<IGameDataRes>) => () =>
+      sendMessage(game, sendClient)
+
+    return { sendMessage: sendMessageDecorator(response, this.sendClientStartGame as TSendClient<IGameDataRes>) }
+  }
+
+  getAttack(data: IAttackRequest, userId: IUser['index']): IGamesResponse | null {
+    const response: IAttackResponse | null = this.gamesService.getAttack(data, userId)
+
+    if (!response) {
+      return null
+    }
 
     const json: string = JSON.stringify({
       id: COMMON_ID,
-      type: COMMANDS.START_GAME,
+      type: COMMANDS.ATTACK,
       data: JSON.stringify(response),
     })
 

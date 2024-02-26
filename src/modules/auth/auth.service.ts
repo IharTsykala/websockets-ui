@@ -10,16 +10,21 @@ export class AuthService implements IAuthService {
   }
 
   signIn(data: IReq['data']): IUser {
-    const password = data.password
-    delete data.password
+    const { name } = data
+
     const user: IUser | undefined = this.usersController.getUser(data as Omit<IUser, 'password'>)
 
     if (!user) {
       return this.signUp(data)
     }
 
-    if (user.password !== password) {
-      return {} as IUser
+    if (user.status && user.name === name) {
+      return {
+        name: user.name,
+        index: user.index,
+        error: true,
+        errorText: 'user already was login',
+      } as unknown as IUser
     }
 
     return user

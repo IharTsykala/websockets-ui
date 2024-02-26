@@ -45,7 +45,13 @@ export class WsServer implements IWsServer {
       ws.on('message', (dataReg: string): void => {
         const { type, data } = this.parseData(dataReg.toString())
 
-        const response: IRes | null = this.mainController.run(type as keyof ICommands, data, ws, this.sendMessage)
+        const response: IRes | null = this.mainController.run(
+          type as keyof ICommands,
+          data,
+          ws,
+          this.sendMessage.bind(this),
+          this.sendClient
+        )
 
         if (!response) {
           return

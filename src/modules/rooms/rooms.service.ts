@@ -15,6 +15,10 @@ export class RoomsService implements IRoomsService {
     return this.dataBase.getRooms()
   }
 
+  getRoom(roomId: number): IRoom | undefined {
+    return this.dataBase.getRoom(roomId)
+  }
+
   addRoom(user: IUser): IRoom {
     const roomId: number = RoomsService.id++
 

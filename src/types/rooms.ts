@@ -22,6 +22,7 @@ export interface IInitialRoomsResponse {
 export interface IRoomsController {
   getInitialRoom: () => IInitialRoomsResponse
   getRooms: () => IRoom[]
+  getRoom: (roomId: number) => IRoom | undefined
   createRoom: (userIndex: IUser['index']) => IRoomsResponse
   // uploadRoom: (userId: number) => IRoom
   removeRoom: (userId: number) => IRoomsResponse
@@ -30,6 +31,7 @@ export interface IRoomsController {
 export interface IRoomsService {
   getInitialRoom: () => []
   getRooms: () => IRoom[]
+  getRoom: (roomId: number) => IRoom | undefined
   addRoom: (user: IUser) => IRoom
   // uploadRoom: (userId: number) => IRoom | undefined
   removeRoom: (userId: number) => IRoom[] | []

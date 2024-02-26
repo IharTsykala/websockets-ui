@@ -52,6 +52,10 @@ export class DataBase implements IDataBase {
     return this.rooms
   }
 
+  getRoom(roomId: IRoom['roomId']): IRoom | undefined {
+    return this.rooms.find((room): boolean => room.roomId === roomId)
+  }
+
   addRoom(room: IRoom): IRoom {
     this.rooms.push(room)
 
@@ -80,6 +84,10 @@ export class DataBase implements IDataBase {
 
       return winner
     }
+  }
+
+  getGame(idGame: IGame['idGame']): IGame | undefined {
+    return this.games.find((game): boolean => game.idGame === idGame)
   }
 
   addGame(game: IGame): IGame {

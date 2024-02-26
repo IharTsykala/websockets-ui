@@ -25,6 +25,10 @@ export class RoomsController implements IRoomsController {
     return this.roomsService.getRooms()
   }
 
+  getRoom(roomId: number): IRoom | undefined {
+    return this.dataBase.getRoom(roomId)
+  }
+
   createRoom(userIndex: IUser['index']): IRoomsResponse {
     const user: IUser | undefined = this.usersController.getUser({ index: userIndex } as Omit<IUser, 'password'>)
 
